@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notes App</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 0;
+            background-color: lavender;
+        }
+
+        #app {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 24px;
+        }
+
+        .note {
+            width: 200px;
+            height: 200px;
+            padding: 16px;
+            box-sizing: border-box;
+            /* Changed note color to a darker yellow */
+            background-color: gold;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        textarea {
+            flex-grow: 1;
+            border: none;
+            resize: none;
+            font-size: 16px;
+            /* Make textarea background transparent to show the note color */
+            background-color: transparent;
+        }
+
+        textarea:focus {
+            outline: none;
+        }
+
+        .note-footer {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 10px;
+        }
+
+        .delete {
+            background-color: #ff4d4d;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .add-note {
+            width: 200px;
+            height: 200px;
+            border: 2px dashed #cccccc;
+            border-radius: 8px;
+            background-color: rgba(255, 255, 255, 0.5);
+            font-size: 48px;
+            color: #cccccc;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            align-self: start;
+            justify-self: start;
+        }
+
+        .add-note:hover {
+            background-color: rgba(255, 255, 255, 0.8);
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <button class="add-note" type="button">+</button>
+    </div>
+
+    <script>
+        const notesContainer = document.getElementById("app");
+        const addNoteButton = document.querySelector(".add-note");
+
+        // Load existing notes when the page loads
+        getNotes().forEach((note) => {
+          const noteElement = createNoteElement(note.id, note.content);
+          notesContainer.insertBefore(noteElement, addNoteButton);
+        });
+
+        // Add a new note when the button is clicked
+        addNoteButton.addEventListener("click", () => addNote());
+
+        function getNotes() {
+          return JSON.parse(localStorage.getItem("stickynotes-notes") || "[]");
+        }
+
+        function saveNotes(notes) {
+          localStorage.setItem("stickynotes-notes", JSON.stringify(notes));
+        }
+
+        function createNoteElement(id, content) {
+          const element = document.createElement("div");
+          element.classList.add("note");
+
+          const textArea = document.createElement("textarea");
+          textArea.placeholder = "Empty Sticky Note";
+          textArea.value = content;
+
+          const footer = document.createElement("div");
+          footer.classList.add("note-footer");
+
+          const deleteButton = document.createElement("button");
+          deleteButton.classList.add("delete");
+          deleteButton.innerText = "Delete";
+
+          footer.appendChild(deleteButton);
+          element.appendChild(textArea);
+          element.appendChild(footer);
+
+          textArea.addEventListener("change", () => {
+            updateNote(id, textArea.value);
+          });
+
+          deleteButton.addEventListener("click", () => {
+            const doDelete = confirm("Are you sure you wish to delete this sticky note?");
+
+            if (doDelete) {
+              deleteNote(id, element);
+            }
+          });
+
+          return element;
+        }
+
+        function addNote() {
+          const notes = getNotes();
+          const noteObject = {
+            id: Math.floor(Math.random() * 100000),
+            content: ""
+          };
+
+          const noteElement = createNoteElement(noteObject.id, noteObject.content);
+          notesContainer.insertBefore(noteElement, addNoteButton);
+
+          notes.push(noteObject);
+          saveNotes(notes);
+        }
+
+        function updateNote(id, newContent) {
+          const notes = getNotes();
+          const targetNote = notes.find((note) => note.id == id);
+
+          if (targetNote) {
+            targetNote.content = newContent;
+            saveNotes(notes);
+          }
+        }
+
+        function deleteNote(id, element) {
+          const notes = getNotes().filter((note) => note.id != id);
+          saveNotes(notes);
+          notesContainer.removeChild(element);
+        }
+    </script>
+</body>
+</html>
